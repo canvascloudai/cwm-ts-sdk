@@ -1,4 +1,4 @@
-import type { Simulation, CreateSimulationInput, Metrics, RlEpisodeConfig, CreateRlEnvironmentResult, RlObservation, RlAction, RlStepResult, ChaosInjectionConfig, ChaosJob, MultiCloudJob, WorkloadProfile, OptimizationWeights, ApiKey, CreateApiKeyResult, AsyncJobRef } from "./types.js";
+import type { Simulation, CreateSimulationInput, Metrics, RlEpisodeConfig, CreateRlEnvironmentResult, RlObservation, RlAction, RlStepResult, ChaosInjectionConfig, ChaosJob, MultiCloudJob, PredictionJob, WorkloadProfile, OptimizationWeights, ApiKey, CreateApiKeyResult, AsyncJobRef } from "./types.js";
 export declare class CwmError extends Error {
     readonly statusCode: number;
     readonly serverMessage: string;
@@ -43,12 +43,71 @@ export declare class CwmClient {
     }): Promise<AsyncJobRef>;
     getChaosJob(jobId: string): Promise<ChaosJob>;
     getChaosResults(jobId: string): Promise<ChaosJob>;
+    /**
+     * Wait for a chaos job to reach a terminal state and return its full results.
+     *
+     * Polls {@link getChaosJob} every `pollIntervalMs` milliseconds until
+     * `status` is `"completed"` or `"failed"`.  The returned Promise resolves
+     * with the complete {@link ChaosJob} (including results) on success, and
+     * rejects with a {@link CwmError} on failure or a plain `Error` on timeout.
+     *
+     * @param jobId - The chaos job ID returned by {@link runChaos}.
+     * @param options.pollIntervalMs - Milliseconds between status checks (default 2000).
+     * @param options.timeoutMs - Maximum milliseconds to wait before rejecting (default 300 000).
+     */
+    waitForChaosJob(jobId: string, options?: {
+        pollIntervalMs?: number;
+        timeoutMs?: number;
+    }): Promise<ChaosJob>;
     exploreMulticloud(workload: WorkloadProfile, options?: {
         optimizationWeights?: OptimizationWeights;
         webhookUrl?: string;
     }): Promise<AsyncJobRef>;
     getMulticloudJob(jobId: string): Promise<MultiCloudJob>;
     getMulticloudResults(jobId: string): Promise<MultiCloudJob>;
+    /**
+     * Wait for a multi-cloud exploration job to reach a terminal state and return its full results.
+     *
+     * Polls {@link getMulticloudJob} every `pollIntervalMs` milliseconds until
+     * `status` is `"completed"` or `"failed"`.  The returned Promise resolves
+     * with the complete {@link MultiCloudJob} (including ranked strategies) on
+     * success, and rejects with a {@link CwmError} on failure or a plain `Error`
+     * on timeout.
+     *
+     * @param jobId - The multi-cloud job ID returned by {@link exploreMulticloud}.
+     * @param options.pollIntervalMs - Milliseconds between status checks (default 2000).
+     * @param options.timeoutMs - Maximum milliseconds to wait before rejecting (default 300 000).
+     */
+    waitForMulticloudJob(jobId: string, options?: {
+        pollIntervalMs?: number;
+        timeoutMs?: number;
+    }): Promise<MultiCloudJob>;
+    validatePrediction(simulationId: string, trafficForecast: unknown, options?: {
+        testSteps?: number;
+        webhookUrl?: string;
+    }): Promise<AsyncJobRef>;
+    optimizePredictionThresholds(simulationId: string, trafficForecast: unknown, options?: {
+        testSteps?: number;
+        webhookUrl?: string;
+    }): Promise<AsyncJobRef>;
+    getPredictionJob(jobId: string): Promise<PredictionJob>;
+    getPredictionResults(jobId: string): Promise<PredictionJob>;
+    /**
+     * Wait for a prediction job to reach a terminal state and return its full results.
+     *
+     * Polls {@link getPredictionJob} every `pollIntervalMs` milliseconds until
+     * `status` is `"completed"` or `"failed"`.  The returned Promise resolves
+     * with the complete {@link PredictionJob} (including results) on success, and
+     * rejects with a {@link CwmError} on failure or a plain `Error` on timeout.
+     *
+     * @param jobId - The prediction job ID returned by {@link validatePrediction} or {@link optimizePredictionThresholds}.
+     * @param options.pollIntervalMs - Milliseconds between status checks (default 2000).
+     * @param options.timeoutMs - Maximum milliseconds to wait before rejecting (default 300 000).
+     */
+    waitForPredictionJob(jobId: string, options?: {
+        pollIntervalMs?: number;
+        timeoutMs?: number;
+    }): Promise<PredictionJob>;
     createApiKey(name: string, options?: {
         scopes?: string[];
         expiresAt?: string;

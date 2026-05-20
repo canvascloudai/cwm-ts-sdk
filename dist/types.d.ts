@@ -233,6 +233,20 @@ export interface CreateApiKeyResult extends ApiKey {
     key: string;
     message?: string;
 }
+export interface PredictionJob {
+    id: string;
+    type: "validate" | "optimize_thresholds";
+    status: JobStatus;
+    baseSimulationId?: string;
+    validationResult?: unknown;
+    thresholdTests?: unknown[];
+    bestThresholds?: unknown;
+    recommendations?: unknown[];
+    trafficForecast?: unknown;
+    createdAt: string;
+    completedAt?: string;
+    error?: string;
+}
 export interface AsyncJobRef {
     jobId: string;
 }
